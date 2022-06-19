@@ -1,4 +1,3 @@
-import Dashboard from "./Dashboard.js";
 import EventEmitter from "./EventEmitter.js";
 
 export default class Game {
@@ -6,6 +5,7 @@ export default class Game {
         this.canvas = canvas;
         this.videoContext = this.canvas.getContext('2d');
         this.running = false;
+        this.size = 10
         this.eventEmitter = new EventEmitter();
         this.canvas.addEventListener('click', (event) => this.eventEmitter.emit({name: 'click', args: event}));
         this.eventEmitter.addListener({name: 'click', times: 1, callback: (args) => this.handleClick(args)})
@@ -13,7 +13,7 @@ export default class Game {
     }
 
     setup(){
-        this.dashboard = new Dashboard(this.videoContext);
+        this.gameMatrix = this.generateGameMatrix();
     }
 
     start(){
@@ -22,12 +22,11 @@ export default class Game {
     }
     
     update(){
-        this.dashboard.update();
     }
     
     draw(){
         this.paintBackground();
-        this.dashboard.draw();
+        this.paintPlayground();
     }
     
     mainLoop(){
@@ -41,7 +40,26 @@ export default class Game {
         this.videoContext.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
+    paintPlayground(){
+
+    }
+
     handleClick(event){
         console.log('handling click with event', event);
+    }
+
+    generateGameMatrix(){
+        let result = [];
+        for(let x = 0; x < this.videoContext.canvas.width / this.size; x++){
+            for(let y = 0; y < this.videoContext.canvas.width / this.size; y++){
+                let bomb = Math.floor(Math.random() * (1 - 0 + 1));
+                if (!result[x]){
+                    result[x] = [];
+                }
+                result[x][y] = bomb;
+            }   
+        }
+        console.log(result);
+        return result;
     }
 }

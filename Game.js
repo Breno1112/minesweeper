@@ -1,7 +1,11 @@
 import EventEmitter from "./EventEmitter.js";
+import KeyboardHandler from "./KeyboardHandler.js";
 
 export default class Game {
     constructor(canvas){
+        this.keyboardHandler = new KeyboardHandler();
+        this.keyboardHandler.addListener({name: "r", times: 1, callback: (args) => this.restart(args)});
+        this.keyboardHandler.addListener({name: "R", times: 1, callback: (args) => this.restart(args)});
         this.canvas = canvas;
         this.videoContext = this.canvas.getContext('2d');
         this.running = false;
@@ -19,10 +23,10 @@ export default class Game {
         this.openFields = 0;
         this.gameMatrix = this.generateGameMatrix();
         this.generateMines();
+        this.running = true;
     }
 
     start(){
-        this.running = true;
         requestAnimationFrame(() => this.mainLoop());
     }
     
@@ -232,5 +236,9 @@ export default class Game {
         this.videoContext.fillStyle="black";
         this.videoContext.font = "30px Georgia";
         this.videoContext.fillText(message, this.canvas.width / 3, this.canvas.height / 3);
+    }
+
+    restart(event) {
+        this.setup();
     }
 }

@@ -27,16 +27,19 @@ export default class Game {
     }
     
     update(){
+        this.checkWin();
     }
     
     draw(){
-        this.paintBackground();
-        this.paintPlayground();
+        if(this.running){
+            this.paintBackground();
+            this.paintPlayground();
+        }
     }
     
     mainLoop(){
-        this.update();
         this.draw();
+        this.update();
         requestAnimationFrame(() => this.mainLoop());
     }
     
@@ -83,44 +86,46 @@ export default class Game {
     }
     
     handleOpenMine(x, y){
-        this.gameMatrix[x][y].open = true;
+        if(!this.running){
+            return;
+        }
+        if(!this.gameMatrix[x][y].open) {
+            this.gameMatrix[x][y].open = true;
+            this.openFields ++;
+        }
+        if(this.gameMatrix[x][y].bomb){
+            this.paintBlownMine(x, y);
+            this.end(false);
+        }
         const mines = this.calculateMines(x, y);
         this.gameMatrix[x][y].mines = mines;
         if (mines < 1) {
             if(typeof(this.gameMatrix[x + 1]) != 'undefined'){
                 if(typeof(this.gameMatrix[x + 1][y]) != 'undefined' && !this.gameMatrix[x + 1][y].open) {
-                    this.gameMatrix[x + 1][y].open = true;
                     this.handleOpenMine(x + 1, y);
                 }
                 if (typeof(this.gameMatrix[x + 1][y + 1]) != 'undefined' && !this.gameMatrix[x + 1][y + 1].open) {
-                    this.gameMatrix[x + 1][y + 1].open = true;
                     this.handleOpenMine(x + 1, y + 1);
                 }
                 if (typeof(this.gameMatrix[x + 1][y - 1]) != 'undefined' && !this.gameMatrix[x + 1][y - 1].open) {
-                    this.gameMatrix[x + 1][y - 1].open = true;
                     this.handleOpenMine(x + 1, y - 1);
                 }
             }
             if(typeof(this.gameMatrix[x - 1]) != 'undefined'){
                 if (typeof(this.gameMatrix[x - 1][y]) != 'undefined' && !this.gameMatrix[x - 1][y].open) {
-                    this.gameMatrix[x - 1][y].open = true;
                     this.handleOpenMine(x - 1, y);
                 }
                 if (typeof(this.gameMatrix[x - 1][y + 1]) != 'undefined' && !this.gameMatrix[x - 1][y + 1].open) {
-                    this.gameMatrix[x - 1][y + 1].open = true;
                     this.handleOpenMine(x - 1, y + 1);
                 }
                 if (typeof(this.gameMatrix[x - 1][y - 1]) != 'undefined' && !this.gameMatrix[x - 1][y - 1].open) {
-                    this.gameMatrix[x - 1][y - 1].open = true;
                     this.handleOpenMine(x - 1, y - 1);
                 }
             }
             if (typeof(this.gameMatrix[x][y + 1]) != 'undefined' && !this.gameMatrix[x][y + 1].open) {
-                this.gameMatrix[x][y + 1].open = true;
                 this.handleOpenMine(x, y + 1);
             }
             if (typeof(this.gameMatrix[x][y - 1]) != 'undefined' && !this.gameMatrix[x][y - 1].open) {
-                this.gameMatrix[x][y - 1].open = true;
                 this.handleOpenMine(x, y - 1);
             }
         }
@@ -208,5 +213,24 @@ export default class Game {
             }
         } catch (e) {
         }
+    }
+
+    checkWin(){
+        if (this.openFields === ((this.canvas.width / this.size) * this.canvas.height / this.size) - this.maxMines) {
+            this.end(true);
+        }
+    }
+
+    paintBlownMine(x, y) {
+        this.videoContext.fillStyle = "red";
+        this.videoContext.fillRect(x * this.size, y * this.size, this.size, this.size);
+    }
+
+    end(win){
+        const message = win ? "You win!": "Game over. Press R to restart";
+        this.running = false;
+        this.videoContext.fillStyle="black";
+        this.videoContext.font = "30px Georgia";
+        this.videoContext.fillText(message, this.canvas.width / 3, this.canvas.height / 3);
     }
 }

@@ -8,7 +8,9 @@ export default class Game {
         this.size = 20
         this.eventEmitter = new EventEmitter();
         this.canvas.addEventListener('click', (event) => this.eventEmitter.emit({name: 'click', args: event}));
+        this.canvas.addEventListener('contextmenu', (event) => this.eventEmitter.emit({name: 'right_click', args: event}));
         this.eventEmitter.addListener({name: 'click', times: 1, callback: (args) => this.handleClick(args)});
+        this.eventEmitter.addListener({name: 'right_click', times: 1, callback: (args) => this.handleRightClick(args)});
         this.setup();
     }
 
@@ -54,6 +56,9 @@ export default class Game {
                     this.videoContext.fillStyle = 'black';
                     this.videoContext.font = "15px Georgia";
                     this.videoContext.fillText(this.gameMatrix[x][y].mines.toString(), (x * this.size) + (this.size / 2), (y * this.size) + (this.size / 2));
+                } else if(!this.gameMatrix[x][y].open && this.gameMatrix[x][y].safe) {
+                    this.videoContext.fillStyle = 'yellow';
+                    this.videoContext.fillRect(x * this.size, y * this.size, this.size, this.size);
                 } else {
                     this.videoContext.strokeRect(x * this.size, y * this.size, this.size, this.size);
                 }
@@ -61,10 +66,16 @@ export default class Game {
         }
     }
 
-    handleClick(event){
+    getCoordinates(event){
         const matrixX = Math.floor(event.offsetX / this.size);
         const matrixY = Math.floor(event.offsetY / this.size);
-        this.handleOpenMine(matrixX, matrixY)
+        return {x: matrixX, y: matrixY};
+    }
+
+    handleClick(event){
+        console.log(event);
+        const {x, y} = this.getCoordinates(event);
+        this.handleOpenMine(x, y)
     }
     
     handleOpenMine(x, y){
@@ -140,5 +151,11 @@ export default class Game {
         }
         console.log(result);
         return result;
+    }
+
+    handleRightClick(event){
+        event.preventDefault();
+        const {x, y} = this.getCoordinates(event);
+        this.gameMatrix[x][y].safe = true;
     }
 }

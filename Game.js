@@ -6,7 +6,7 @@ export default class Game {
         this.videoContext = this.canvas.getContext('2d');
         this.running = false;
         this.size = 20
-        this.maxMines = 50;
+        this.maxMines = 100;
         this.eventEmitter = new EventEmitter();
         this.canvas.addEventListener('click', (event) => this.eventEmitter.emit({name: 'click', args: event}));
         this.canvas.addEventListener('contextmenu', (event) => this.eventEmitter.emit({name: 'right_click', args: event}));
@@ -189,7 +189,6 @@ export default class Game {
                 result[x][y] = {open: false, bomb: false};
             }   
         }
-        console.log(result);
         return result;
     }
 

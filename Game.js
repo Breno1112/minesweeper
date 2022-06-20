@@ -9,7 +9,6 @@ export default class Game {
         this.eventEmitter = new EventEmitter();
         this.canvas.addEventListener('click', (event) => this.eventEmitter.emit({name: 'click', args: event}));
         this.eventEmitter.addListener({name: 'click', times: 1, callback: (args) => this.handleClick(args)});
-        this.printed = false;
         this.setup();
     }
 
@@ -37,25 +36,95 @@ export default class Game {
     }
     
     paintBackground(){
-        this.videoContext.fillStyle="grey";
+        this.videoContext.fillStyle="#BFBFBF";
         this.videoContext.fillRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
     paintPlayground(){
         for(let x = 0; x < this.canvas.width / this.size; x++){
             for (let y = 0; y < this.canvas.height / this.size; y++){
-                this.videoContext.fillStyle = "black";
+                this.videoContext.strokeStyle = "#8E8E8E";
+                this.videoContext.fillStyle = "grey";
                 this.videoContext.strokeRect(x * this.size, y * this.size, this.size, this.size);
+                if (this.gameMatrix[x][y].bomb && this.gameMatrix[x][y].open) {
+                    this.videoContext.fillStyle = 'red';
+                    this.videoContext.fillRect(x * this.size, y * this.size, this.size, this.size);
+                } else if(this.gameMatrix[x][y].open){
+                    this.videoContext.fillRect(x * this.size, y * this.size, this.size, this.size);
+                    this.videoContext.fillStyle = 'black';
+                    this.videoContext.font = "15px Georgia";
+                    this.videoContext.fillText(this.gameMatrix[x][y].mines.toString(), (x * this.size) + (this.size / 2), (y * this.size) + (this.size / 2));
+                } else {
+                    this.videoContext.strokeRect(x * this.size, y * this.size, this.size, this.size);
+                }
             }
         }
-        this.printed = true;
     }
 
     handleClick(event){
-        console.log('handling click with event', event);
         const matrixX = Math.floor(event.offsetX / this.size);
         const matrixY = Math.floor(event.offsetY / this.size);
-        console.log(`clicked on matrix x=${matrixX} and y = ${matrixY}`);
+        this.handleOpenMine(matrixX, matrixY)
+    }
+    
+    handleOpenMine(x, y){
+        console.log(`clicked on matrix x=${x} and y = ${x} and is bomb? ${this.gameMatrix[x][x].bomb}`);
+        this.gameMatrix[x][y].open = true;
+        const mines = this.calculateMines(x, y);
+    }
+
+    calculateMines(x, y){
+        var mines = 0;
+        var up, down, left, right, upleft, upright, downleft, downright;
+        if (x === 0){
+            left = 0;
+            upleft = 0;
+            downleft =0;
+        } else if (x >= this.canvas.width / this.size - 1) {
+            right = 0;
+            upright = 0;
+            downright = 0;
+        }
+        if (y == 0){
+            up = 0;
+            upleft = 0;
+            upright = 0;
+        } else if (y >= this.canvas.height / this.size - 1) {
+            down = 0;
+            downleft = 0;
+            downright = 0;
+        }
+        if (typeof(up) == 'undefined'){
+            up = this.gameMatrix[x][y-1].bomb ? 1 : 0;
+        }
+        if (typeof(down) == 'undefined'){
+            down = this.gameMatrix[x][y+1].bomb ? 1 : 0;
+        }
+
+        if (typeof(left) == 'undefined'){
+            left = this.gameMatrix[x - 1][y].bomb ? 1 : 0;
+        }
+
+        if (typeof(right) == 'undefined'){
+            right = this.gameMatrix[x + 1][y].bomb ? 1 : 0;
+        }
+        if (typeof(upleft) == 'undefined' ){
+            upleft = this.gameMatrix[x -1][y-1].bomb ? 1 : 0;
+        }
+
+        if (typeof(upright) == 'undefined'){
+            upright = this.gameMatrix[x + 1][y-1].bomb ? 1 : 0;
+        }
+
+        if (typeof(downleft) == 'undefined'){
+            downleft = this.gameMatrix[x -1][y+1].bomb ? 1 : 0;
+        }
+        if (typeof(downright) == 'undefined' ){
+            downright = this.gameMatrix[x + 1][y+1].bomb ? 1 : 0;
+        }
+        mines = up + down + left + right + upleft + upright + downleft + downright;
+        this.gameMatrix[x][y].mines = mines;
+        console.log(this.gameMatrix[x][y]);
     }
 
     generateGameMatrix(){
@@ -66,7 +135,7 @@ export default class Game {
                 if (!result[x]){
                     result[x] = [];
                 }
-                result[x][y] = {open: false, bomb: bomb};
+                result[x][y] = {open: false, bomb: bomb > 0};
             }   
         }
         console.log(result);

@@ -6,6 +6,7 @@ export default class Game {
         this.videoContext = this.canvas.getContext('2d');
         this.running = false;
         this.size = 20
+        this.maxMines = 50;
         this.eventEmitter = new EventEmitter();
         this.canvas.addEventListener('click', (event) => this.eventEmitter.emit({name: 'click', args: event}));
         this.canvas.addEventListener('contextmenu', (event) => this.eventEmitter.emit({name: 'right_click', args: event}));
@@ -15,7 +16,9 @@ export default class Game {
     }
 
     setup(){
+        this.openFields = 0;
         this.gameMatrix = this.generateGameMatrix();
+        this.generateMines();
     }
 
     start(){
@@ -53,9 +56,11 @@ export default class Game {
                     this.videoContext.fillRect(x * this.size, y * this.size, this.size, this.size);
                 } else if(this.gameMatrix[x][y].open){
                     this.videoContext.fillRect(x * this.size, y * this.size, this.size, this.size);
-                    this.videoContext.fillStyle = 'black';
+                    if(this.gameMatrix[x][y].mines > 0) {
+                        this.videoContext.fillStyle = 'black';
                     this.videoContext.font = "15px Georgia";
                     this.videoContext.fillText(this.gameMatrix[x][y].mines.toString(), (x * this.size) + (this.size / 2), (y * this.size) + (this.size / 2));
+                    }
                 } else if(!this.gameMatrix[x][y].open && this.gameMatrix[x][y].safe) {
                     this.videoContext.fillStyle = 'yellow';
                     this.videoContext.fillRect(x * this.size, y * this.size, this.size, this.size);
@@ -142,11 +147,10 @@ export default class Game {
         let result = [];
         for(let x = 0; x < this.videoContext.canvas.width / this.size; x++){
             for(let y = 0; y < this.videoContext.canvas.width / this.size; y++){
-                let bomb = Math.floor(Math.random() * (1 - 0 + 1));
                 if (!result[x]){
                     result[x] = [];
                 }
-                result[x][y] = {open: false, bomb: bomb > 0};
+                result[x][y] = {open: false, bomb: false};
             }   
         }
         console.log(result);
@@ -157,5 +161,17 @@ export default class Game {
         event.preventDefault();
         const {x, y} = this.getCoordinates(event);
         this.gameMatrix[x][y].safe = true;
+    }
+
+    generateMines(){
+        try {
+            for (let i = 0; i < this.maxMines; i++){
+                const maxLen = this.canvas.width / this.size - 1;
+                const x = Math.floor(Math.random() * (maxLen - 0 + 1)) + 0;;
+                const y = Math.floor(Math.random() * (maxLen - 0 + 1)) + 0;
+                this.gameMatrix[x][y].bomb = true;
+            }
+        } catch (e) {
+        }
     }
 }

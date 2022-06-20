@@ -78,15 +78,52 @@ export default class Game {
     }
 
     handleClick(event){
-        console.log(event);
         const {x, y} = this.getCoordinates(event);
         this.handleOpenMine(x, y)
     }
     
     handleOpenMine(x, y){
-        console.log(`clicked on matrix x=${x} and y = ${x} and is bomb? ${this.gameMatrix[x][x].bomb}`);
         this.gameMatrix[x][y].open = true;
         const mines = this.calculateMines(x, y);
+        this.gameMatrix[x][y].mines = mines;
+        if (mines < 1) {
+            if(typeof(this.gameMatrix[x + 1]) != 'undefined'){
+                if(typeof(this.gameMatrix[x + 1][y]) != 'undefined' && !this.gameMatrix[x + 1][y].open) {
+                    this.gameMatrix[x + 1][y].open = true;
+                    this.handleOpenMine(x + 1, y);
+                }
+                if (typeof(this.gameMatrix[x + 1][y + 1]) != 'undefined' && !this.gameMatrix[x + 1][y + 1].open) {
+                    this.gameMatrix[x + 1][y + 1].open = true;
+                    this.handleOpenMine(x + 1, y + 1);
+                }
+                if (typeof(this.gameMatrix[x + 1][y - 1]) != 'undefined' && !this.gameMatrix[x + 1][y - 1].open) {
+                    this.gameMatrix[x + 1][y - 1].open = true;
+                    this.handleOpenMine(x + 1, y - 1);
+                }
+            }
+            if(typeof(this.gameMatrix[x - 1]) != 'undefined'){
+                if (typeof(this.gameMatrix[x - 1][y]) != 'undefined' && !this.gameMatrix[x - 1][y].open) {
+                    this.gameMatrix[x - 1][y].open = true;
+                    this.handleOpenMine(x - 1, y);
+                }
+                if (typeof(this.gameMatrix[x - 1][y + 1]) != 'undefined' && !this.gameMatrix[x - 1][y + 1].open) {
+                    this.gameMatrix[x - 1][y + 1].open = true;
+                    this.handleOpenMine(x - 1, y + 1);
+                }
+                if (typeof(this.gameMatrix[x - 1][y - 1]) != 'undefined' && !this.gameMatrix[x - 1][y - 1].open) {
+                    this.gameMatrix[x - 1][y - 1].open = true;
+                    this.handleOpenMine(x - 1, y - 1);
+                }
+            }
+            if (typeof(this.gameMatrix[x][y + 1]) != 'undefined' && !this.gameMatrix[x][y + 1].open) {
+                this.gameMatrix[x][y + 1].open = true;
+                this.handleOpenMine(x, y + 1);
+            }
+            if (typeof(this.gameMatrix[x][y - 1]) != 'undefined' && !this.gameMatrix[x][y - 1].open) {
+                this.gameMatrix[x][y - 1].open = true;
+                this.handleOpenMine(x, y - 1);
+            }
+        }
     }
 
     calculateMines(x, y){
@@ -139,8 +176,7 @@ export default class Game {
             downright = this.gameMatrix[x + 1][y+1].bomb ? 1 : 0;
         }
         mines = up + down + left + right + upleft + upright + downleft + downright;
-        this.gameMatrix[x][y].mines = mines;
-        console.log(this.gameMatrix[x][y]);
+        return mines;
     }
 
     generateGameMatrix(){
